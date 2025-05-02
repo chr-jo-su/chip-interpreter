@@ -18,6 +18,7 @@ document.getElementById('romFile').addEventListener('change', function (event) {
     const romData = new Uint8Array(fileBuffer);
 
     resetCPU();
+    clearDisplay();
 
     for (let i = 0; i < romData.length; i++) {
       if (0x200 + i < mem.length) {
@@ -29,7 +30,7 @@ document.getElementById('romFile').addEventListener('change', function (event) {
     }
 
     storeSprites();
-    console.log(`Loaded ${file.name}, ${romData.length} bytes`);
+    console.log(`loaded ${file.name}, ${romData.length} bytes`);
     cpu_running = true;
     event.target.value = null;
   }
