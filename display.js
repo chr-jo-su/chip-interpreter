@@ -1,5 +1,7 @@
 const displayCanvas = document.getElementById("displayCanvas");
 var display_buffer = new Array(64 * 32).fill(false);
+var refresh_display = false;
+const SCALE = 10;
 
 function checkIfBitSet(byte, position) {
   const mask = 1 << position;
@@ -23,18 +25,26 @@ function drawSprite(x, y, addr, n) {
     registers[0xF] = 1;
   else
     registers[0xF] = 0;
+
+  refresh_display = true;
 }
 
-function clearDisplay() {
-  displayCanvas.width = 64 * 10;
-  displayCanvas.height = 32 * 10;
+function setDisplaySize() {
+  displayCanvas.width = 64 * SCALE;
+  displayCanvas.height = 32 * SCALE;
+}
+setDisplaySize();
 
+function clearDisplay() {
   for (let i = 0; i < display_buffer.length; i++)
     display_buffer[i] = 0;
 }
 clearDisplay();
 
 function updateDisplay() {
+  if (!refresh_display)
+    return;
+
   if (displayCanvas.getContext) {
     const ctx = displayCanvas.getContext('2d');
 
@@ -45,9 +55,11 @@ function updateDisplay() {
         else
           ctx.fillStyle = 'black';
 
-        ctx.fillRect(x * 10, y * 10, 10, 10);
+        ctx.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
       }
     }
   }
+
+  refresh_display = false;
 }
 updateDisplay();

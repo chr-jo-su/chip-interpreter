@@ -32,6 +32,7 @@ document.getElementById('romFile').addEventListener('change', function (event) {
     storeSprites();
     console.log(`loaded ${file.name}, ${romData.length} bytes`);
     cpu_running = true;
+    start_cpu_loop();
     event.target.value = null;
   }
 

@@ -93,8 +93,8 @@ function cycleCPU() {
   switch (opcode) {
     case 0x0:
       if ((full_opcode & 0x00FF) == 0xEE) {
-        pc = (mem[sp] << 8) | mem[sp + 1];
         sp -= 2;
+        pc = (mem[sp] << 8) | mem[sp + 1];
       } else {
         clearDisplay();
       }
@@ -105,9 +105,9 @@ function cycleCPU() {
       break;
 
     case 0x2:
-      sp += 2;
       mem[sp] = (pc & 0xFF00) >>> 8;
       mem[sp + 1] = (pc & 0x00FF);
+      sp += 2;
       pc = nnn;
       break;
 
@@ -153,37 +153,41 @@ function cycleCPU() {
           break;
 
         case 0x4:
-          if (registers[x] + registers[y] > 255)
+          var tmp = registers[x] + registers[y];
+          registers[x] = tmp;
+          if (tmp > 255)
             registers[0xF] = 1;
           else
             registers[0xF] = 0;
-          registers[x] = registers[x] + registers[y];
           break;
 
         case 0x5:
-          if (registers[x] > registers[y])
+          var tmp = registers[x] > registers[y];
+          registers[x] = registers[x] - registers[y];
+          if (tmp)
             registers[0xF] = 1;
           else
             registers[0xF] = 0;
-          registers[x] = registers[x] - registers[y];
+
           break;
 
         case 0x6:
-          registers[0xF] = registers[y] & 0b1;
-          registers[x] = registers[y] >>> 1;
+          registers[0xF] = registers[x] & 0b1;
+          registers[x] = registers[x] >>> 1;
           break;
 
         case 0x7:
-          if (registers[y] > registers[x])
+          var tmp = registers[y] > registers[x];
+          registers[x] = registers[y] - registers[x];
+          if (tmp)
             registers[0xF] = 1;
           else
             registers[0xF] = 0;
-          registers[x] = registers[y] - registers[x];
           break;
 
         case 0xE:
-          registers[0xF] = (registers[y] & 0b10000000) >>> 7;
-          registers[x] = registers[y] << 1;
+          registers[0xF] = (registers[x] & 0b10000000) >>> 7;
+          registers[x] = registers[x] << 1;
           break;
 
         default:
@@ -260,13 +264,13 @@ function cycleCPU() {
         case 0x55:
           for (let i = 0; i <= x; i++)
             mem[reg_i + i] = registers[i];
-          reg_i = reg_i + x + 1;
+          // reg_i = reg_i + x + 1;
           break;
 
         case 0x65:
           for (let i = 0; i <= x; i++)
             registers[i] = mem[reg_i + i];
-          reg_i = reg_i + x + 1;
+          // reg_i = reg_i + x + 1;
           break;
 
         default:
@@ -281,18 +285,17 @@ function cycleCPU() {
       cpu_running = false;
       break;
   }
+}
+
+const cyclesPerFrame = 3;
+let animationFrameId = null;
+
+function start_cpu_loop() {
+  for (let i = 0; i < cyclesPerFrame; i++)
+    cycleCPU();
 
   updateDisplay();
   updateStats();
-}
-setInterval(cycleCPU, 1);
-// setInterval(cycleCPU, 1000);
 
-// function waitForInput() {
-//   for (let i = 0; i < keyboard_input.length; i++)
-//     if (keyboard_input[i]) {
-//       registers[tmp_reg] = i;
-//       cpu_running = true;
-//       clearInterval(waitForInput);
-//     }
-// }
+  animationFrameId = requestAnimationFrame(start_cpu_loop);
+}
