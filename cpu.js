@@ -60,6 +60,7 @@ function decrementTimers() {
   if (delay_timer > 0)
     delay_timer--;
 }
+setInterval(decrementTimers, 1000 / 60);
 
 function cycleCPU() {
   if (!cpu_running)
@@ -170,8 +171,8 @@ function cycleCPU() {
           break;
 
         case 0x6:
-          var tmp = registers[x] & 0x1;
-          registers[x] = registers[x] >>> 1;
+          var tmp = registers[y] & 0x1;
+          registers[x] = registers[y] >>> 1;
           registers[0xF] = tmp;
           break;
 
@@ -185,8 +186,8 @@ function cycleCPU() {
           break;
 
         case 0xE:
-          var tmp = (registers[x] & 0x80) >>> 7;
-          registers[x] = registers[x] << 1;
+          var tmp = (registers[y] & 0x80) >>> 7;
+          registers[x] = registers[y] << 1;
           registers[0xF] = tmp;
           break;
 
@@ -264,13 +265,13 @@ function cycleCPU() {
         case 0x55:
           for (let i = 0; i <= x; i++)
             mem[reg_i + i] = registers[i];
-          reg_i = reg_i + x + 1;
+          // reg_i = reg_i + x + 1;
           break;
 
         case 0x65:
           for (let i = 0; i <= x; i++)
             registers[i] = mem[reg_i + i];
-          reg_i = reg_i + x + 1;
+          // reg_i = reg_i + x + 1;
           break;
 
         default:
@@ -287,14 +288,12 @@ function cycleCPU() {
   }
 }
 
-const cyclesPerFrame = 3;
+const cyclesPerFrame = 1000;
 let animationFrameId = null;
 
 function start_cpu_loop() {
   for (let i = 0; i < cyclesPerFrame; i++)
     cycleCPU();
-
-  decrementTimers();
 
   updateDisplay();
   updateStats();
