@@ -65,8 +65,6 @@ function cycleCPU() {
   if (!cpu_running)
     return;
 
-  decrementTimers();
-
   if (sound_timer > 0 && !beeping) {
     oscillator = audioCtx.createOscillator();
     oscillator.type = "sine";
@@ -154,7 +152,7 @@ function cycleCPU() {
 
         case 0x4:
           var tmp = registers[x] + registers[y];
-          registers[x] = tmp;
+          registers[x] = tmp & 0xFF;
           if (tmp > 255)
             registers[0xF] = 1;
           else
@@ -162,8 +160,8 @@ function cycleCPU() {
           break;
 
         case 0x5:
-          var tmp = registers[x] > registers[y];
-          registers[x] = registers[x] - registers[y];
+          var tmp = registers[x] >= registers[y];
+          registers[x] = (registers[x] - registers[y]) & 0xFF;
           if (tmp)
             registers[0xF] = 1;
           else
@@ -172,13 +170,14 @@ function cycleCPU() {
           break;
 
         case 0x6:
-          registers[0xF] = registers[x] & 0b1;
+          var tmp = registers[x] & 0x1;
           registers[x] = registers[x] >>> 1;
+          registers[0xF] = tmp;
           break;
 
         case 0x7:
-          var tmp = registers[y] > registers[x];
-          registers[x] = registers[y] - registers[x];
+          var tmp = registers[y] >= registers[x];
+          registers[x] = (registers[y] - registers[x]) & 0xFF;
           if (tmp)
             registers[0xF] = 1;
           else
@@ -186,8 +185,9 @@ function cycleCPU() {
           break;
 
         case 0xE:
-          registers[0xF] = (registers[x] & 0b10000000) >>> 7;
+          var tmp = (registers[x] & 0x80) >>> 7;
           registers[x] = registers[x] << 1;
+          registers[0xF] = tmp;
           break;
 
         default:
@@ -264,13 +264,13 @@ function cycleCPU() {
         case 0x55:
           for (let i = 0; i <= x; i++)
             mem[reg_i + i] = registers[i];
-          // reg_i = reg_i + x + 1;
+          reg_i = reg_i + x + 1;
           break;
 
         case 0x65:
           for (let i = 0; i <= x; i++)
             registers[i] = mem[reg_i + i];
-          // reg_i = reg_i + x + 1;
+          reg_i = reg_i + x + 1;
           break;
 
         default:
@@ -293,6 +293,8 @@ let animationFrameId = null;
 function start_cpu_loop() {
   for (let i = 0; i < cyclesPerFrame; i++)
     cycleCPU();
+
+  decrementTimers();
 
   updateDisplay();
   updateStats();

@@ -11,20 +11,25 @@ function checkIfBitSet(byte, position) {
 
 function drawSprite(x, y, addr, n) {
   var pixel_unset = false;
+  registers[0xF] = 0;
+
   for (let byte = 0; byte < n; byte++) {
     for (let bit = 0; bit < 8; bit++) {
       let pos_x = (x + bit) % 64;
       let pos_y = (y + byte) % 32;
+      let orig = display_buffer[pos_x + 64 * pos_y];
+      if (display_buffer[pos_x + 64 * pos_y] == true && orig == true)
+        registers[0xF] = 1;
       display_buffer[pos_x + 64 * pos_y] = display_buffer[pos_x + 64 * pos_y] ^ checkIfBitSet(mem[addr + byte], 7 - bit);
-      if (display_buffer[pos_x + 64 * pos_y] == 0)
-        pixel_unset = true;
+
+      // pixel_unset = true;
     }
   }
 
-  if (pixel_unset)
+  /* if (pixel_unset)
     registers[0xF] = 1;
   else
-    registers[0xF] = 0;
+    registers[0xF] = 0; */
 
   refresh_display = true;
 }
